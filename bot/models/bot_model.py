@@ -18,7 +18,7 @@ class Bot(commands.Bot):
                          description='Banner Updating Counter Bot',
                          )
 
-    async def bot_ready_to_use(self):
+    async def on_ready(self):
         self.banner_update_counter.start()
         self.remove_command('help')
 
@@ -43,21 +43,19 @@ class Bot(commands.Bot):
 
             self.guild = self.get_guild(settings.server_id)
 
-            for vc in self.guild.voice_channels:
-                voice_users = sum(len(vc.members))
+            voice_users = sum(len(vc.members) for vc in guild.voice_channels)
 
             server_members = len(self.guild.members)
 
-            banner_proccesor.draw_most_active_member(
-                draw=self.draw, most_active_member=most_active_member)
+            banner = await banner_proccesor.process_banner(
+                activity=str(guild.member_count),
+                voice_users=voice_users,
+                most_active_member=most_active_member,
+                timeout=timeout
+            )
             
-            banner_proccesor._draw_time(draw=self.draw, timeout=timeout)
-
-            banner_proccesor._draw_activity(
-                draw=self.draw, activity=server_members)
             
-            banner_proccesor._draw_voice_users(
-                draw=self.draw, voice_users=voice_users)
+            banner.save("current_banner.png")
             
         except discord.DiscordException as e:
             print(f"Ошибка Discord API: {e}")
@@ -67,6 +65,6 @@ class Bot(commands.Bot):
 
         except ValueError as e:
             print(f"Ошибка данных: {e}")
-            
+
         except Exception as e:
             print(f"Неожиданная ошибка: {e}")
