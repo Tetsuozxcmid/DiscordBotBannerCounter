@@ -24,7 +24,7 @@ class BannerProcessor:
             self.draw_active_member(draw, most_active_member)
             self._draw_time(draw, timeout)
 
-            return banner
+            
         except Exception as e:
             raise ValueError(f"Ошибка при обработке баннера: {str(e)}")
 

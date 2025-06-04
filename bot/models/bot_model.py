@@ -5,7 +5,7 @@ from discord.ext import commands, tasks
 import datetime
 from core.BotSettings.config import settings
 from models.banner_model import banner_proccesor
-
+from io import BytesIO
 
 class Bot(commands.Bot):
     def __init__(self):
@@ -33,10 +33,14 @@ class Bot(commands.Bot):
         for channels in guild.text_channels:
             async for message in channels.history(after=getting_time_past):
                 members = guild.members
-                if message.author not in members and not message.author.bot:
-                    self.messages_from_users[message.author] += 1
+                if message.author in members and not message.author.bot:
+                    if message.author in self.messages_from_users:
+                        self.messages_from_users[message.author] += 1
+                    else:
+                        self.messages_from_users[message.author] = 1
 
         try:
+
             most_active_member = max(
                 self.messages_from_users, key=self.messages_from_users.get)
 
@@ -54,6 +58,11 @@ class Bot(commands.Bot):
             
             
             banner.save("current_banner.png")
+
+            with BytesIO() as ImageBinary:
+                banner.save(ImageBinary, "png")
+                ImageBinary.seek(0)
+                await self.guild.edit(banner=ImageBinary.read())
             
         except discord.DiscordException as e:
             print(f"Ошибка Discord API: {e}")
