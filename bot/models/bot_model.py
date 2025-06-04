@@ -19,19 +19,18 @@ class Bot(commands.Bot):
                          )
 
     async def on_ready(self):
-        self.banner_update_counter.start()
+        self.updating_banner_and_timezone.start()
         self.remove_command('help')
 
     @tasks.loop(seconds=10)
     async def updating_banner_and_timezone(self):
         getting_time_past = datetime.datetime.utcnow() - datetime.timedelta(hours=1)
 
-        getting_timezone = datetime.datetime.now(
-            pytz.timezone('Europe/Moscow'))
-        timeout = getting_timezone("%H:%M")
+        
+        timeout = datetime.datetime.now(pytz.timezone('Europe/Moscow')).strftime('%H:%M')
 
         guild = self.get_guild(settings.server_id)
-        async for channels in guild.text_channels:
+        for channels in guild.text_channels:
             async for message in channels.history(after=getting_time_past):
                 members = guild.members
                 if message.author not in members and not message.author.bot:
@@ -45,7 +44,6 @@ class Bot(commands.Bot):
 
             voice_users = sum(len(vc.members) for vc in guild.voice_channels)
 
-            server_members = len(self.guild.members)
 
             banner = await banner_proccesor.process_banner(
                 activity=str(guild.member_count),
