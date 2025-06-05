@@ -11,6 +11,7 @@ class Bot(commands.Bot):
     def __init__(self):
         self.bot_token = settings.bot_token
         self.messages_from_users = {}
+        self.members_all = {}
         intents = discord.Intents.all()
         intents.message_content = True
 
@@ -44,6 +45,14 @@ class Bot(commands.Bot):
             except Exception as e:
                 print(f"error in {channels.name}: {e}")
 
+        for member in guild.members:
+                if not member.bot:
+                    if member.name not in self.members_all:
+                        self.members_all[member.name] = self.members_all.get(member.name,0) + 1
+            
+
+        
+
         try:
             
             most_active_member, message_count = max(self.messages_from_users.items(), key=lambda x: x[1])
@@ -54,9 +63,15 @@ class Bot(commands.Bot):
             voice_users = sum(len(vc.members) for vc in guild.voice_channels)
             print(f"users in voice {voice_users}")
 
+            
+
+            member_count = guild.member_count
+            print(f"Members {member_count}")
+
+            print(f"{self.members_all}")
 
             banner = await banner_proccesor.process_banner(
-                activity=str(guild.member_count),
+                activity=str(member_count),
                 voice_users=voice_users,
                 most_active_member=most_active_member,
                 timeout=timeout
