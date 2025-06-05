@@ -9,7 +9,7 @@ from io import BytesIO
 
 class Bot(commands.Bot):
     def __init__(self):
-        self.bot_token = settings.token
+        self.bot_token = settings.bot_token
         self.messages_from_users = {}
         intents = discord.Intents.all()
         intents.message_content = True
