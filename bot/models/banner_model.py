@@ -2,6 +2,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import io
 import aiohttp
 
+
 class BannerProcessor:
     def __init__(self, template_path: str = "BannerLite.png"):
         self.font_size = 85
@@ -24,7 +25,6 @@ class BannerProcessor:
             self.draw_active_member(draw, most_active_member)
             self._draw_time(draw, timeout)
 
-            
         except Exception as e:
             raise ValueError(f"Ошибка при обработке баннера: {str(e)}")
 
@@ -52,26 +52,24 @@ class BannerProcessor:
             async with aiohttp.ClientSession() as session:
                 async with session.get(str(most_active_member.display_avatar.url)) as resp:
                     avatar_data = await resp.read()
-            
+
             avatar_img = Image.open(io.BytesIO(avatar_data))
             avatar_img = avatar_img.convert('RGBA')
-            avatar_img = ImageOps.fit(avatar_img, (320, 320), 
-                                    method=Image.LANCZOS, 
-                                    centering=(0.5, 0.5))
-            
-            
+            avatar_img = ImageOps.fit(avatar_img, (320, 320),
+                                      method=Image.LANCZOS,
+                                      centering=(0.5, 0.5))
+
             mask = Image.new('L', (320, 320), 0)
             mask_draw = ImageDraw.Draw(mask)
             mask_draw.ellipse((0, 0, 320, 320), fill=255)
             avatar_img.putalpha(mask)
-            
-            
+
             self.banner.paste(avatar_img, (227, 601), avatar_img)
-            
-            
+
             font = ImageFont.truetype(self.fonts['status'], size=96)
-            draw.text((1608, 807), most_active_member.name[:20], font=font, fill="white")
-            
+            draw.text(
+                (1608, 807), most_active_member.name[:20], font=font, fill="white")
+
         except Exception as e:
             print(f"Ошибка при обработке аватара: {e}")
 
