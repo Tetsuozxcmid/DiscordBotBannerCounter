@@ -9,6 +9,7 @@ from io import BytesIO
 
 
 class Bot(commands.Bot):
+    
     def __init__(self):
         self.bot_token = settings.bot_token
         self.messages_from_users = {}
@@ -37,8 +38,10 @@ class Bot(commands.Bot):
                 'most_active': most_active_member.name,
                 'time': timeout
             }
-
+            
             await ctx.send(str(response))
+
+        
 
         @self.command(name='get_info_by_user')
         async def get_info_by_user(ctx, target_user: str):
@@ -71,7 +74,9 @@ class Bot(commands.Bot):
         self.updating_banner_and_timezone.start()
         self.remove_command('help')
 
-    @tasks.loop(seconds=3)
+    
+
+    @tasks.loop(seconds=60)
     async def updating_banner_and_timezone(self):
         self.messages_from_users = {}
 
@@ -99,44 +104,36 @@ class Bot(commands.Bot):
                         member.name, 0) + 1
 
         try:
-
             most_active_member, message_count = max(
                 self.messages_from_users.items(), key=lambda x: x[1])
-            print(
-                f"most active is {most_active_member.name} -- {message_count} messages got")
-
-            self.guild = self.get_guild(settings.server_id)
-
+            
             voice_users = sum(len(vc.members) for vc in guild.voice_channels)
-            print(f"users in voice {voice_users}")
-
             member_count = guild.member_count
-            print(f"Members {member_count}")
-
-            print(f"{self.members_all}")
-
-            banner = await banner_proccesor.process_banner(
+            
+            banner = banner_proccesor.process_banner(
                 activity=str(member_count),
                 voice_users=voice_users,
                 most_active_member=most_active_member,
                 timeout=timeout
             )
-
+            
+            if banner is None:
+                raise ValueError("Не удалось создать баннер")
+            
+            
             banner.save("current_banner.png")
-
+            
+            
             with BytesIO() as ImageBinary:
                 banner.save(ImageBinary, "png")
                 ImageBinary.seek(0)
-                await self.guild.edit(banner=ImageBinary.read())
-
+                guild.edit(banner=ImageBinary.read())
+                
         except discord.DiscordException as e:
             print(f"Ошибка Discord API: {e}")
-
         except (IOError, Image.DecompressionBombError) as e:
             print(f"Ошибка обработки изображения: {e}")
-
         except ValueError as e:
             print(f"Ошибка данных: {e}")
-
         except Exception as e:
             print(f"Неожиданная ошибка: {e}")
